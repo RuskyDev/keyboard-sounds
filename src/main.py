@@ -29,8 +29,11 @@ SOUND = None
 VERSION = "1.0"
 
 def CheckIfRunning():
+    if not os.path.exists(APPDATA_PATH):
+        os.makedirs(APPDATA_PATH)
+
     if os.path.exists(LOCK_FILE):
-        sys.exit()
+        sys.exit("Another instance is already running.")
     else:
         with open(LOCK_FILE, 'w') as lock:
             lock.write(str(os.getpid()))
