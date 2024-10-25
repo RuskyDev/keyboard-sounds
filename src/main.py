@@ -10,11 +10,14 @@ import threading
 from plyer import notification
 import webbrowser
 import atexit
+import shutil
 
 # Paths
 APPDATA_PATH = os.path.join(os.getenv('APPDATA'), 'keyboard-sounds')
+STARTUP_FOLDER = os.path.join(os.getenv('APPDATA'), 'Microsoft\\Windows\\Start Menu\\Programs\\Startup')
 SOUNDS_PATH = os.path.join(APPDATA_PATH, 'sounds')
 CONFIG_PATH = os.path.join(APPDATA_PATH, 'config.json')
+APP_PATH = os.path.abspath(__file__)
 ICON_URL = 'https://github.com/RuskyDev/keyboard-sounds/raw/refs/heads/main/setup/icon.ico'
 ICON_FILE = os.path.join(APPDATA_PATH, 'icon.ico')
 DEFAULT_SOUND_URL = 'https://github.com/RuskyDev/keyboard-sounds/raw/refs/heads/main/setup/default.mp3'
@@ -26,7 +29,7 @@ IS_ENABLED = True
 VOLUME_LEVEL = 0.5
 TRAY_ICON = None
 SOUND = None
-VERSION = "1.0"
+VERSION = "1.2"
 
 def CheckIfRunning():
     if not os.path.exists(APPDATA_PATH):
@@ -62,7 +65,8 @@ def CreateConfig():
     if not os.path.exists(CONFIG_PATH):
         config_data = {
             "sound": "default.mp3",
-            "volume": VOLUME_LEVEL
+            "volume": VOLUME_LEVEL,
+            "run_on_startup": True
         }
         with open(CONFIG_PATH, 'w') as config_file:
             json.dump(config_data, config_file)
@@ -91,10 +95,31 @@ def CheckForUpdates():
             )
     except Exception as e:
         return
+        
+def HandleStartup():
+    with open(CONFIG_PATH, 'r') as config_file:
+        config = json.load(config_file)
+    
+    app_filename = os.path.basename(APP_PATH)
+    startup_file = os.path.join(STARTUP_FOLDER, app_filename)
+    
+    if config.get("run_on_startup", False):
+        if not os.path.exists(startup_file):
+            try:
+                shutil.copy(APP_PATH, startup_file)
+            except Exception as e:
+                return
+    else:
+        if os.path.exists(startup_file):
+            try:
+                os.remove(startup_file)
+            except Exception as e:
+                return
 
 mixer.init()
-DownloadAssets()
 CreateConfig()
+HandleStartup()
+DownloadAssets()
 
 SOUND = LoadSound()
 
@@ -128,6 +153,7 @@ def ReloadConfigurations(icon, item):
     global SOUND, VOLUME_LEVEL
     SOUND = LoadSound()
     mixer.Sound.set_volume(SOUND, VOLUME_LEVEL)
+    HandleStartup()
 
 def OpenConfigurations(icon, item):
     os.startfile(CONFIG_PATH)
