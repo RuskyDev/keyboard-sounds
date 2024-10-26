@@ -31,7 +31,6 @@ VERSION = "1.2"
 def CheckIfRunning():
     if not os.path.exists(APPDATA_PATH):
         os.makedirs(APPDATA_PATH)
-
     if os.path.exists(LOCK_FILE):
         sys.exit("Another instance is already running.")
     else:
@@ -47,12 +46,10 @@ CheckIfRunning()
 def DownloadAssets():
     if not os.path.exists(SOUNDS_PATH):
         os.makedirs(SOUNDS_PATH)
-    
     if not os.path.exists(DEFAULT_SOUND_FILE):
         response = requests.get(DEFAULT_SOUND_URL)
         with open(DEFAULT_SOUND_FILE, 'wb') as file:
             file.write(response.content)
-    
     if not os.path.exists(ICON_FILE):
         response = requests.get(ICON_URL)
         with open(ICON_FILE, 'wb') as file:
@@ -71,7 +68,6 @@ def LoadSound():
     global VOLUME_LEVEL
     with open(CONFIG_PATH, 'r') as config_file:
         config = json.load(config_file)
-
     sound_file = os.path.join(SOUNDS_PATH, config["sound"])
     VOLUME_LEVEL = config.get("volume", 0.5)
     sound = mixer.Sound(sound_file)
@@ -87,22 +83,21 @@ def CheckForUpdates():
                 title="Keyboard Sounds Update",
                 message=f"Your version is {VERSION}. A new version {latest_version} is available. Please update!",
                 app_name="Keyboard Sounds",
-                timeout=1
+                timeout=0
             )
-    except Exception as e:
+    except Exception:
         return
 
 mixer.init()
 DownloadAssets()
 CreateConfig()
-
 SOUND = LoadSound()
 
 notification.notify(
     title="Keyboard Sounds",
     message="The app is running in the background. Right-click the tray icon for more information.",
     app_name="Keyboard Sounds",
-    timeout=1
+    timeout=0
 )
 
 CheckForUpdates()
@@ -164,8 +159,6 @@ def SetupTrayIcon():
 
 TRAY_THREAD = threading.Thread(target=SetupTrayIcon)
 TRAY_THREAD.start()
-
 LISTENER_THREAD = threading.Thread(target=StartListener)
 LISTENER_THREAD.start()
-
 atexit.register(DeleteLockFile)
