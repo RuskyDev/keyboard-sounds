@@ -26,7 +26,7 @@ IS_ENABLED = True
 VOLUME_LEVEL = 0.5
 TRAY_ICON = None
 SOUND = None
-VERSION = "1.0"
+VERSION = "1.2"
 
 def CheckIfRunning():
     if not os.path.exists(APPDATA_PATH):
